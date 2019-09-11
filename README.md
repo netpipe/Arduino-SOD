@@ -6,3 +6,5 @@ perfect lightweight library for porting to arduino.  found the files needed for 
 was going to try sobel kernel face detection for faster results but this seems to be plenty fast.
 
 https://github.com/symisc/sod based on this library
+
+https://github.com/espressif/esp-face here is another one, the trainer seems to be closed source though.
