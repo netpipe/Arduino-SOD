@@ -1,5 +1,6 @@
 # Arduino-SOD
-[!screenshot][./logo.png]
+![ScreenShot](./logo.png)
+
 
 SOD neural network library implimentation on Arduino for object detection.
 
