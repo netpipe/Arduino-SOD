@@ -1,5 +1,7 @@
 #include <SD.h>
 #include <alloca.h>
+
+#define SOD_ENABLE_NET_TRAIN
 #include "sod.h"
 
 #define MaxModelSize 16384
@@ -70,4 +72,59 @@ if (SOD_OK == rc )
 void loop() {
   // put your main code here, to run repeatedly:
 
+}
+
+
+
+
+#include <stdio.h>
+//#include "sod.h"
+/*
+ * Training log consumer callback that should be called
+ * by the Realnet trainer to report training progress.
+ */
+void log_consumer_callback(const char *zText, size_t text_len, void *pUserdata)
+{
+  /* Simply redirect to stdout */
+  puts(zText);
+}
+
+int train(const char *zTrainFile)
+{
+  /* Training instructions (i.e. where positive and negative samples
+   * are located, tree minimal depth, max trees, model copyright notice and so on).
+   * Pass a path or download one from https://pixlab.io/downloads
+   */
+
+   
+//  const char *zTrainFile = argc > 1 ? argv[1] : "train.txt";
+  /*
+   * Relanet trainer handle
+   */
+  sod_realnet_trainer *pNett;
+  int rc;
+  /* Allocate a new Realnet Trainer handle */
+  rc = sod_realnet_train_init(&pNett);
+  if (rc != SOD_OK) return rc;
+  /*
+   * Install our training progress log consumer callback.
+   */
+  rc = sod_realnet_train_config(pNett, SOD_REALNET_TR_LOG_CALLBACK, log_consumer_callback, 0);
+  if (rc != SOD_OK) return rc;
+  /*
+   * Where to store the output model.
+   */
+  rc = sod_realnet_train_config(pNett, SOD_REALNET_TR_OUTPUT_MODEL, "./pedestrian_detetcor.realnet");
+  if (rc != SOD_OK) return rc;
+  /*
+   * Start the heavy training process on your CPU driven by
+   * the Realnet instructions found on `zTrainFile`.
+   */
+  rc = sod_realnet_train_start(pNett, zTrainFile);
+  /* Wait some days...*/
+  sod_realnet_train_release(pNett);
+  /* check the progress log and you should find
+  * a working model on the path you specified earlier.
+  */
+  return rc;
 }
