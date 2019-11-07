@@ -46,6 +46,13 @@
 #define	SOD_APIIMPORT
 #define	SOD_APIEXPORT
 #endif
+
+
+/*
+#define  SOD_DISABLE_IMG_READER
+
+#define  SOD_DISABLE_IMG_WRITER
+
 /*
  * The SOD_VERSION C preprocessor macro evaluates to a string literal
  * that is the SOD version in the format "X.Y.Z" where X is the major

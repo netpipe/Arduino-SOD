@@ -31,6 +31,8 @@
 * along with SOD. If not, see <http://www.gnu.org/licenses/>.
 */
 /* $SymiscID: sod.c v1.1.8 Win10 2018-02-02 05:34 stable <devel@symisc.net> $ */
+
+#define TWO_PI 6.2831853071795864769252866
 #ifdef _MSC_VER
 #ifndef _CRT_SECURE_NO_WARNINGS
 /*
@@ -61,6 +63,7 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
+#define SOD_DISABLE_CNN
 /* Local includes */
 #include "sod.h"
 /* Forward declaration */
@@ -1024,6 +1027,10 @@ static int SySetAlloc(SySet *pSet, int nItem)
 	pSet->nSize = nItem;
 	return SOD_OK;
 }
+
+#define _ARDUINO
+#ifndef _ARDUINO
+
 #if defined (_WIN32) || defined (WIN32) ||  defined (_WIN64) || defined (WIN64) || defined(__MINGW32__) || defined (_MSC_VER)
 /* Windows Systems */
 #if !defined(__WINNT__)
@@ -1714,22 +1721,23 @@ static const sod_vfs sWinVfs = {
 * Status:
 *    Stable.
 */
-#include "sys/types.h"
+//#include <types.h>
 #include <limits.h>
 #ifdef SOD_ENABLE_NET_TRAIN
-#include <sys/time.h>d
+#include <sys/time.h>
 #else
 #include <time.h>
 #endif /* SOD_ENABLE_NET_TRAIN */
 #include <fcntl.h>
 #include <unistd.h>
+/*
 #include "newlib/sys/uio.h"
 #include "newlib/sys/stat.h"
 #include "newlib/sys/mman.h"
 #include "newlib/sys/file.h"
 //#include <dirent.h>
 #include "dirent.h"
-#include "newlib/utime.h"
+#include "newlib/utime.h"*/
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -1964,6 +1972,8 @@ static const sod_vfs sUnixVfs = {
 	UnixVfs_get_ticks   /* float (*xTicks)() */
 };
 #endif /* __WINNT__/__UNIXES__ */
+
+
 /*
 * Export the builtin vfs.
 * Return a pointer to the builtin vfs if available.
@@ -1983,12 +1993,14 @@ static const sod_vfs * sodExportBuiltinVfs(void)
 	return &sUnixVfs;
 #endif /* __WINNT__/__UNIXES__ */
 }
+
 /* @VFS */
 #ifdef TWO_PI
 #undef TWO_PI
 #endif /* Important */
 /* From http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform */
-#define TWO_PI 6.2831853071795864769252866
+#endif //ARDUINO
+
 static float rand_normal()
 {
 	static int haveSpare = 0;
@@ -2034,6 +2046,7 @@ static int rand_int(int min, int max)
 	int r = (rand() % (max - min + 1)) + min;
 	return r;
 }
+
 static float rand_scale(float s)
 {
 	float scale = rand_uniform(1, s);
@@ -2049,6 +2062,8 @@ static inline void sod_md_alloc_dyn_img(sod_img *pFrame, int w, int h, int c)
 		pFrame->data = realloc(pFrame->data, w * h * c * sizeof(float));
 	}
 }
+
+
 #ifndef SOD_DISABLE_CNN
 /*
  * List of implemented layers (excluding LSTM).
@@ -13363,6 +13378,10 @@ int sod_realnet_load_model_from_mem(sod_realnet *pNet, const void * pModel, unsi
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
+
+#define _ARDUINO
+#ifndef _ARDUINO
+
 int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_realnet_model_handle *pOutHandle)
 {
 	const sod_vfs *pVfs = sodExportBuiltinVfs();
@@ -13391,6 +13410,10 @@ int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_
 	}
 	return SOD_OK;
 }
+
+#endif // _ARDUINO
+
+
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
@@ -13568,6 +13591,10 @@ sod_img sod_img_load_from_mem(const unsigned char * zBuf, int buf_len, int nChan
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
+
+#define _ARDUINO
+#ifndef _ARDUINO
+
 sod_img sod_img_load_from_file(const char *zFile, int nChannels)
 {
 	const sod_vfs *pVfs = sodExportBuiltinVfs();
@@ -13604,6 +13631,8 @@ sod_img sod_img_load_from_file(const char *zFile, int nChannels)
 	}
 	return im;
 }
+
+#endif //_ARDUINO
 /*
 * Extract path fields.
 */
