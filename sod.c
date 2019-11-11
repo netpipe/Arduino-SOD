@@ -63,7 +63,9 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
-#define SOD_DISABLE_CNN
+
+//#define SOD_DISABLE_CNN // speed boosts and less compile space 
+
 /* Local includes */
 #include "sod.h"
 /* Forward declaration */
