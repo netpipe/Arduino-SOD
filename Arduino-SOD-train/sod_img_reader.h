@@ -317,11 +317,15 @@ Blazej Dariusz Roszkowski                                     github:Michaelange
 //   - If you use STBI_NO_PNG (or _ONLY_ without PNG), and you still
 //     want the zlib decoder to be available, #define STBI_SUPPORT_ZLIB
 //
-#define _ARDUINO
 
 
+#ifndef STBI_NO_STDIO
+#ifndef ARDUINO
+#include <stdio.h>
+#else
 #include "ardio.h"
-
+#endif //ARDUINO
+#endif // STBI_NO_STDIO
 
 #define STBI_VERSION 1
 
@@ -533,7 +537,7 @@ extern "C" {
 #endif
 
 #ifndef STBI_NO_STDIO
-//#include <stdio.h>
+#include <stdio.h>
 #endif
 
 #ifndef STBI_ASSERT
@@ -748,7 +752,7 @@ static void stbi__start_callbacks(stbi__context *s, stbi_io_callbacks *c, void *
 
 static int stbi__stdio_read(void *user, char *data, int size)
 {
-	return (int)fileread(data, 1, size, (FILE*)user);
+	return (int)fread(data, 1, size, (FILE*)user);
 }
 
 static void stbi__stdio_skip(void *user, int n)
@@ -1166,7 +1170,7 @@ static FILE *stbi__fopen(char const *filename, char const *mode)
 	if (0 != fopen_s(&f, filename, mode))
 		f = 0;
 #else
-	f = fileopen(filename, mode);
+	f = fopen(filename, mode);
 #endif
 	return f;
 }
@@ -1178,7 +1182,7 @@ STBIDEF stbi_uc *stbi_load(char const *filename, int *x, int *y, int *comp, int 
 	unsigned char *result;
 	if (!f) return stbi__errpuc("can't fopen", "Unable to open file");
 	result = stbi_load_from_file(f, x, y, comp, req_comp);
-	fileclose(f);
+	fclose(f);
 	return result;
 }
 
@@ -1195,8 +1199,6 @@ STBIDEF stbi_uc *stbi_load_from_file(FILE *f, int *x, int *y, int *comp, int req
 	return result;
 }
 
-
-
 STBIDEF stbi__uint16 *stbi_load_from_file_16(FILE *f, int *x, int *y, int *comp, int req_comp)
 {
 	stbi__uint16 *result;
@@ -1210,14 +1212,13 @@ STBIDEF stbi__uint16 *stbi_load_from_file_16(FILE *f, int *x, int *y, int *comp,
 	return result;
 }
 
-
 STBIDEF stbi_us *stbi_load_16(char const *filename, int *x, int *y, int *comp, int req_comp)
 {
 	FILE *f = stbi__fopen(filename, "rb");
 	stbi__uint16 *result;
 	if (!f) return (stbi_us *)stbi__errpuc("can't fopen", "Unable to open file");
 	result = stbi_load_from_file_16(f, x, y, comp, req_comp);
-	fileclose(f);
+	fclose(f);
 	return result;
 }
 
@@ -1308,7 +1309,7 @@ STBIDEF float *stbi_loadf(char const *filename, int *x, int *y, int *comp, int r
 	FILE *f = stbi__fopen(filename, "rb");
 	if (!f) return stbi__errpf("can't fopen", "Unable to open file");
 	result = stbi_loadf_from_file(f, x, y, comp, req_comp);
-	fileclose(f);
+	fclose(f);
 	return result;
 }
 
@@ -1346,7 +1347,7 @@ STBIDEF int      stbi_is_hdr(char const *filename)
 	int result = 0;
 	if (f) {
 		result = stbi_is_hdr_from_file(f);
-		fileclose(f);
+		fclose(f);
 	}
 	return result;
 }
@@ -7294,7 +7295,7 @@ STBIDEF int stbi_info(char const *filename, int *x, int *y, int *comp)
 	int result;
 	if (!f) return stbi__err("can't fopen", "Unable to open file");
 	result = stbi_info_from_file(f, x, y, comp);
-	fileclose(f);
+	fclose(f);
 	return result;
 }
 
@@ -7315,7 +7316,7 @@ STBIDEF int stbi_is_16_bit(char const *filename)
 	int result;
 	if (!f) return stbi__err("can't fopen", "Unable to open file");
 	result = stbi_is_16_bit_from_file(f);
-	fileclose(f);
+	fclose(f);
 	return result;
 }
 

@@ -31,12 +31,6 @@
 * along with SOD. If not, see <http://www.gnu.org/licenses/>.
 */
 /* $SymiscID: sod.c v1.1.8 Win10 2018-02-02 05:34 stable <devel@symisc.net> $ */
-#include "ardio.h"
-#ifndef _ARDUINO
-#define _ARDUINO
-
-#endif //_ARDUINO
-#define TWO_PI 6.2831853071795864769252866
 #ifdef _MSC_VER
 #ifndef _CRT_SECURE_NO_WARNINGS
 /*
@@ -50,7 +44,11 @@
 #pragma warning(disable:4305)
 #endif /* _MSC_VER */
 /* Standard C library includes */
+#ifndef ARDUINO
 #include <stdio.h>
+#else
+#include "ardio.h"
+#endif //ARDUINO
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -67,7 +65,6 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
-#define SOD_DISABLE_CNN
 /* Local includes */
 #include "sod.h"
 /* Forward declaration */
@@ -1031,10 +1028,6 @@ static int SySetAlloc(SySet *pSet, int nItem)
 	pSet->nSize = nItem;
 	return SOD_OK;
 }
-
-
-
-
 #if defined (_WIN32) || defined (WIN32) ||  defined (_WIN64) || defined (WIN64) || defined(__MINGW32__) || defined (_MSC_VER)
 /* Windows Systems */
 #if !defined(__WINNT__)
@@ -1084,8 +1077,7 @@ static inline int libcox_result_string(SyBlob *pBlob, const char *zBuf, int nLen
 	SyBlobNullAppend(&(*pBlob));
 	return rc;
 }
-
-#ifndef _ARDUINO
+#ifndef ARDUINO
 #ifdef __WINNT__
 /*
 * Windows VFS implementation for the LIBCOX engine.
@@ -1727,7 +1719,7 @@ static const sod_vfs sWinVfs = {
 * Status:
 *    Stable.
 */
-//#include <types.h>
+#include <sys/types.h>
 #include <limits.h>
 #ifdef SOD_ENABLE_NET_TRAIN
 #include <sys/time.h>
@@ -1736,14 +1728,12 @@ static const sod_vfs sWinVfs = {
 #endif /* SOD_ENABLE_NET_TRAIN */
 #include <fcntl.h>
 #include <unistd.h>
-/*
-#include "newlib/sys/uio.h"
-#include "newlib/sys/stat.h"
-#include "newlib/sys/mman.h"
-#include "newlib/sys/file.h"
-//#include <dirent.h>
-#include "dirent.h"
-#include "newlib/utime.h"*/
+#include <sys/uio.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <sys/file.h>
+#include <dirent.h>
+#include <utime.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -1979,7 +1969,47 @@ static const sod_vfs sUnixVfs = {
 };
 #endif /* __WINNT__/__UNIXES__ */
 
+#endif //ARDUINO
 
+#ifdef ARDUINO
+  #include "ardvfs.h"
+
+ static const sod_vfs Ard_vfs={
+ "FAT32",
+  LIBCOX_VFS_VERSION,
+  0,
+  MAX_PATH,
+  ArdVfs_chdir,    /* int (*xChdir)(const char *) */
+  ArdVfs_getcwd,   /* int (*xGetcwd)(SyBlob *) */
+  ArdVfs_mkdir,    /* int (*xMkdir)(const char *, int, int) */
+  ArdVfs_rmdir,    /* int (*xRmdir)(const char *) */
+  ArdVfs_isdir,    /* int (*xIsdir)(const char *) */
+  ArdVfs_Rename,   /* int (*xRename)(const char *, const char *) */
+  ArdVfs_Realpath, /*int (*xRealpath)(const char *, SyBlob *)*/
+   /* Directory */
+  ArdDir_Open,
+  ArdDir_Close,
+  ArdDir_Read,
+  ArdDir_Rewind,
+  /* Systems function */
+  ArdVfs_unlink, /* int (*xUnlink)(const char *) */
+  ArdVfs_FileExists, /* int (*xFileExists)(const char *) */
+  ArdVfs_DiskFreeSpace, /* int64_t (*xFreeSpace)(const char *) */
+  ArdVfs_DiskTotalSpace, /* int64_t (*xTotalSpace)(const char *) */
+  ArdVfs_FileSize, /* int64_t (*xFileSize)(const char *) */
+  ArdVfs_isfile,     /* int (*xIsfile)(const char *) */
+  ArdVfs_isfile,     /* int (*xReadable)(const char *) */
+  ArdVfs_iswritable, /* int (*xWritable)(const char *) */
+  ArdVfs_isexecutable, /* int (*xExecutable)(const char *) */
+  0,     /* int (*xGetenv)(const char *, SyBlob *) */
+  0,     /* int (*xSetenv)(const char *, const char *) */
+  ArdVfs_Mmap,       /* int (*xMmap)(const char *, void **, size_t *) */
+  ArdVfs_Unmap,      /* void (*xUnmap)(void *, size_t);  */
+  0,    /* void (*xTempDir)(SyBlob *) */
+  ArdVfs_GetTicks  /* float (*xTicks)(void) */
+};
+
+#endif 
 /*
 * Export the builtin vfs.
 * Return a pointer to the builtin vfs if available.
@@ -1992,21 +2022,24 @@ static const sod_vfs sUnixVfs = {
 */
 static const sod_vfs * sodExportBuiltinVfs(void)
 {
+#ifdef  ARDUINO
+  
+  return &Ard_vfs;
+#else  
 #ifdef __WINNT__
 	return &sWinVfs;
 #else
 	/* Assume UNIX-Like */
 	return &sUnixVfs;
 #endif /* __WINNT__/__UNIXES__ */
+#endif //ARDUINO
 }
-
 /* @VFS */
 #ifdef TWO_PI
 #undef TWO_PI
 #endif /* Important */
 /* From http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform */
-#endif //ARDUINO
-
+#define TWO_PI 6.2831853071795864769252866
 static float rand_normal()
 {
 	static int haveSpare = 0;
@@ -2052,7 +2085,6 @@ static int rand_int(int min, int max)
 	int r = (rand() % (max - min + 1)) + min;
 	return r;
 }
-
 static float rand_scale(float s)
 {
 	float scale = rand_uniform(1, s);
@@ -2068,8 +2100,6 @@ static inline void sod_md_alloc_dyn_img(sod_img *pFrame, int w, int h, int c)
 		pFrame->data = realloc(pFrame->data, w * h * c * sizeof(float));
 	}
 }
-
-
 #ifndef SOD_DISABLE_CNN
 /*
  * List of implemented layers (excluding LSTM).
@@ -4007,16 +4037,16 @@ static void transpose_matrix(float *a, int rows, int cols)
 static void load_convolutional_weights(layer l, FILE *fp)
 {
 	int num = l.n*l.c*l.size*l.size;
-	fileread(l.biases, sizeof(float), l.n, fp);
+	fread(l.biases, sizeof(float), l.n, fp);
 	if (l.batch_normalize && (!l.dontloadscales)) {
-		fileread(l.scales, sizeof(float), l.n, fp);
-		fileread(l.rolling_mean, sizeof(float), l.n, fp);
-		fileread(l.rolling_variance, sizeof(float), l.n, fp);
+		fread(l.scales, sizeof(float), l.n, fp);
+		fread(l.rolling_mean, sizeof(float), l.n, fp);
+		fread(l.rolling_variance, sizeof(float), l.n, fp);
 	}
-	fileread(l.weights, sizeof(float), num, fp);
+	fread(l.weights, sizeof(float), num, fp);
 	if (l.adam) {
-		fileread(l.m, sizeof(float), num, fp);
-		fileread(l.v, sizeof(float), num, fp);
+		fread(l.m, sizeof(float), num, fp);
+		fread(l.v, sizeof(float), num, fp);
 	}
 	if (l.flipped) {
 		transpose_matrix(l.weights, l.c*l.size*l.size, l.n);
@@ -4029,15 +4059,15 @@ static void load_convolutional_weights(layer l, FILE *fp)
 }
 static void load_connected_weights(layer l, FILE *fp, int transpose)
 {
-	fileread(l.biases, sizeof(float), l.outputs, fp);
-	fileread(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+	fread(l.biases, sizeof(float), l.outputs, fp);
+	fread(l.weights, sizeof(float), l.outputs*l.inputs, fp);
 	if (transpose) {
 		transpose_matrix(l.weights, l.inputs, l.outputs);
 	}
 	if (l.batch_normalize && (!l.dontloadscales)) {
-		fileread(l.scales, sizeof(float), l.outputs, fp);
-		fileread(l.rolling_mean, sizeof(float), l.outputs, fp);
-		fileread(l.rolling_variance, sizeof(float), l.outputs, fp);
+		fread(l.scales, sizeof(float), l.outputs, fp);
+		fread(l.rolling_mean, sizeof(float), l.outputs, fp);
+		fread(l.rolling_variance, sizeof(float), l.outputs, fp);
 	}
 #if 0 /* SOD_GPU */
 	if (gpu_index >= 0) {
@@ -4047,9 +4077,9 @@ static void load_connected_weights(layer l, FILE *fp, int transpose)
 }
 static void load_batchnorm_weights(layer l, FILE *fp)
 {
-	fileread(l.scales, sizeof(float), l.c, fp);
-	fileread(l.rolling_mean, sizeof(float), l.c, fp);
-	fileread(l.rolling_variance, sizeof(float), l.c, fp);
+	fread(l.scales, sizeof(float), l.c, fp);
+	fread(l.rolling_mean, sizeof(float), l.c, fp);
+	fread(l.rolling_variance, sizeof(float), l.c, fp);
 #if 0 /* SOD_GPU */
 	if (gpu_index >= 0) {
 		push_batchnorm_layer(l);
@@ -4068,22 +4098,22 @@ static int load_weights_upto(network *net, const char *filename, int cutoff)
 		cuda_set_device(net->gpu_index);
 	}
 #endif
-	fp = fileopen(filename, "rb");
+	fp = fopen(filename, "rb");
 	if (!fp) {
 		net->pNet->nErr++;
 		net->pNet->zErr = "Cannot open SOD model";
 		return SOD_IOERR;
 	}
 
-	fileread(&major, sizeof(int), 1, fp);
-	fileread(&minor, sizeof(int), 1, fp);
-	fileread(&revision, sizeof(int), 1, fp);
+	fread(&major, sizeof(int), 1, fp);
+	fread(&minor, sizeof(int), 1, fp);
+	fread(&revision, sizeof(int), 1, fp);
 	if ((major * 10 + minor) >= 2 && major < 1000 && minor < 1000) {
-		fileread(net->seen, sizeof(uint64_t), 1, fp);
+		fread(net->seen, sizeof(uint64_t), 1, fp);
 	}
 	else {
 		int iseen = 0;
-		fileread(&iseen, sizeof(int), 1, fp);
+		fread(&iseen, sizeof(int), 1, fp);
 		*net->seen = iseen;
 	}
 	transpose = (major > 1000) || (minor > 1000);
@@ -4120,8 +4150,8 @@ static int load_weights_upto(network *net, const char *filename, int cutoff)
 		if (l.type == LOCAL) {
 			int locations = l.out_w*l.out_h;
 			int size = l.size*l.size*l.c*l.n*locations;
-			fileread(l.biases, sizeof(float), l.outputs, fp);
-			fileread(l.weights, sizeof(float), size, fp);
+			fread(l.biases, sizeof(float), l.outputs, fp);
+			fread(l.weights, sizeof(float), size, fp);
 #if 0 /* SOD_GPU */
 			if (gpu_index >= 0) {
 				push_local_layer(l);
@@ -4129,7 +4159,7 @@ static int load_weights_upto(network *net, const char *filename, int cutoff)
 #endif
 		}
 	}
-	fileclose(fp);
+	fclose(fp);
 	return SOD_OK;
 }
 static int load_weights(network *net, const char *filename)
@@ -7428,7 +7458,7 @@ static int *read_map(char *filename)
 	int n = 0;
 	int *map = 0;
 	char *str;
-	FILE *file = fileopen(filename, "r");
+	FILE *file = fopen(filename, "r");
 	if (!file) {
 		return 0;
 	}
@@ -7766,7 +7796,7 @@ static int parse_detection(detection_layer *l, list *options, size_params params
 static tree *read_tree(char *filename)
 {
 	tree t = { 0 };
-	FILE *fp = fileopen(filename, "r");
+	FILE *fp = fopen(filename, "r");
 
 	char *line;
 	int last_parent = -1;
@@ -7814,7 +7844,7 @@ static tree *read_tree(char *filename)
 	for (i = 0; i < n; ++i) t.leaf[i] = 1;
 	for (i = 0; i < n; ++i) if (t.parent[i] >= 0) t.leaf[t.parent[i]] = 0;
 
-	fileclose(fp);
+	fclose(fp);
 	tree *tree_ptr = calloc(1, sizeof(tree));
 	*tree_ptr = t;
 
@@ -8823,7 +8853,7 @@ int sod_cnn_create(sod_cnn **ppOut, const char *zArch, const char *zModelPath, c
 	/* Zero */
 	memset(pNet, 0, sizeof(sod_cnn));
 	/* Export the built-in VFS */
-//	pNet->pVfs = sodExportBuiltinVfs();
+	pNet->pVfs = sodExportBuiltinVfs();
 	srand((unsigned int)pNet->pVfs->xTicks());
 	/* Check if we are dealing with a memory buffer or with a file path */
 	while (isspace(zArch[0])) zArch++;
@@ -12790,8 +12820,6 @@ static float DetectorPrepareEpochSamples(sod_realnet_detector *pDet, size_t *nPo
 /*
 * Generate a binary classifier to be used with the realnet network.
 */
-
-#include "ardio.h"
 static int DetectorSaveCascadetoDisk(sod_realnet_detector *pDet)
 {
 	int nTrees = (int)SySetUsed(&pDet->aTree);
@@ -12806,26 +12834,26 @@ static int DetectorSaveCascadetoDisk(sod_realnet_detector *pDet)
 		/* No regression trees were actually generated, return immediately */
 		return SOD_OK;
 	}
-	file = fileopen(pDet->pTrainer->zOutPath, "wb");
+	file = fopen(pDet->pTrainer->zOutPath, "wb");
 	if (!file) {
 		return SOD_ABORT;
 	}
 	/* Magic headers */
-	filewrite(&pDet->version, sizeof(int32_t), 1, file);
-	filewrite(&pDet->bbox[0], sizeof(int8_t), 4, file);
-	filewrite(&pDet->min_tree_depth, sizeof(int), 1, file);
-	filewrite(&nTrees, sizeof(int), 1, file);
+	fwrite(&pDet->version, sizeof(int32_t), 1, file);
+	fwrite(&pDet->bbox[0], sizeof(int8_t), 4, file);
+	fwrite(&pDet->min_tree_depth, sizeof(int), 1, file);
+	fwrite(&nTrees, sizeof(int), 1, file);
 	/* Generated tress */
 	aTrees = SySetBasePtr(&pDet->aTree);
 	for (i = 0; i<nTrees; ++i)
 	{
 		sod_tree *pTree = &aTrees[i];
 		/* Nodes, lookup table and thresholds. */
-		filewrite(pTree->aNodes, sizeof(int32_t), (1 << pTree->depth) - 1, file);
-		filewrite(pTree->aLeafs, sizeof(float), 1 << pTree->depth, file);
-		filewrite(&pTree->threshold, sizeof(float), 1, file);
+		fwrite(pTree->aNodes, sizeof(int32_t), (1 << pTree->depth) - 1, file);
+		fwrite(pTree->aLeafs, sizeof(float), 1 << pTree->depth, file);
+		fwrite(&pTree->threshold, sizeof(float), 1, file);
 	}
-	fileclose(file);
+	fclose(file);
 	return SOD_OK;
 }
 /*
@@ -13011,7 +13039,7 @@ int sod_realnet_train_init(sod_realnet_trainer ** ppOut)
 	SySetInit(&pTrainer->aPos, sizeof(sod_img));
 	SySetInit(&pTrainer->aNeg, sizeof(sod_img));
 	SySetInit(&pTrainer->aTest, sizeof(sod_img));
-	//pTrainer->pVfs = sodExportBuiltinVfs();
+	pTrainer->pVfs = sodExportBuiltinVfs();
 	/* Register the built-in layers */
 	sod_realnet_trainer_register_builtin_layers(&(*pTrainer));
 	return SOD_OK;
@@ -13386,17 +13414,16 @@ int sod_realnet_load_model_from_mem(sod_realnet *pNet, const void * pModel, unsi
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
-
 int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_realnet_model_handle *pOutHandle)
 {
-	//const sod_vfs *pVfs = sodExportBuiltinVfs();
+	const sod_vfs *pVfs = sodExportBuiltinVfs();
 	sod_realnet_model sModel;
 	void *pMap = 0;
 	size_t sz;
 	int rc;
-//	if (SOD_OK != pVfs->xMmap(zPath, &pMap, &sz)) {
-//		return SOD_IOERR;
-//	}
+	if (SOD_OK != pVfs->xMmap(zPath, &pMap, &sz)) {
+		return SOD_IOERR;
+	}
 	/* Parse the model */
 	memset(&sModel, 0, sizeof(sod_realnet_model));
 	rc = RealnetParseDetectionCascade(pMap, sz, &sModel, 1);
@@ -13415,10 +13442,6 @@ int sod_realnet_load_model_from_disk(sod_realnet *pNet, const char * zPath, sod_
 	}
 	return SOD_OK;
 }
-
-
-
-
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
@@ -13542,15 +13565,15 @@ int sod_realnet_detect(sod_realnet *pNet, const unsigned char *zGrayImg, int wid
 void sod_realnet_destroy(sod_realnet * pNet)
 {
 	sod_realnet_model *aModel = (sod_realnet_model *)SySetBasePtr(&pNet->aModels);
-//	const sod_vfs *pVfs = sodExportBuiltinVfs();
+	const sod_vfs *pVfs = sodExportBuiltinVfs();
 	size_t n;
 	/* Release the memory view if any for each loaded model */
 	for (n = 0; n < SySetUsed(&pNet->aModels); ++n) {
 		sod_realnet_model *pMl = &aModel[n];
 		/* For models */
-	//	if (pMl->pMmap) {
-	//		pVfs->xUnmap(pMl->pMmap, pMl->mapSz);
-	//	}
+		if (pMl->pMmap) {
+			pVfs->xUnmap(pMl->pMmap, pMl->mapSz);
+		}
 	}
 	SySetRelease(&pNet->aBox);
 	SySetRelease(&pNet->aModels);
@@ -13596,23 +13619,20 @@ sod_img sod_img_load_from_mem(const unsigned char * zBuf, int buf_len, int nChan
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
-
-
-
 sod_img sod_img_load_from_file(const char *zFile, int nChannels)
 {
-//	const sod_vfs *pVfs = sodExportBuiltinVfs();
+	const sod_vfs *pVfs = sodExportBuiltinVfs();
 	unsigned char *data;
-//	void *pMap = 0;
+	void *pMap = 0;
 	size_t sz = 0; /* gcc warn */
 	int w, h, c;
 	int i, j, k;
-	//if (SOD_OK != pVfs->xMmap(zFile, &pMap, &sz)) {
+	if (SOD_OK != pVfs->xMmap(zFile, &pMap, &sz)) {
 		data = stbi_load(zFile, &w, &h, &c, nChannels);
-//	}
-//	else {
-//		data = stbi_load_from_memory((const unsigned char *)pMap, (int)sz, &w, &h, &c, nChannels);
-//	}
+	}
+	else {
+		data = stbi_load_from_memory((const unsigned char *)pMap, (int)sz, &w, &h, &c, nChannels);
+	}
 	if (!data) {
 		return sod_make_empty_image(0, 0, 0);
 	}
@@ -13630,13 +13650,11 @@ sod_img sod_img_load_from_file(const char *zFile, int nChannels)
 		}
 	}
 	free(data);
-//	if (pMap) {
-//		pVfs->xUnmap(pMap, sz);
-//	}
+	if (pMap) {
+		pVfs->xUnmap(pMap, sz);
+	}
 	return im;
 }
-
-
 /*
 * Extract path fields.
 */
@@ -13738,8 +13756,6 @@ static int CmpSyString(SyString *pStr, const char *zIn)
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */
-
-#ifndef _ARDUINO
 int sod_img_set_load_from_directory(const char * zPath, sod_img ** apLoaded, int * pnLoaded, int max_entries)
 {
 	static const char *zAllowed[] = { "png","jpg","jpeg","bmp","pgm","ppm","pbm","hdr","psd","tga","pic", 0 /*Marker*/ };
@@ -13809,8 +13825,6 @@ int sod_img_set_load_from_directory(const char * zPath, sod_img ** apLoaded, int
 	*pnLoaded = (int)SySetUsed(&aEntries);
 	return SOD_OK;
 }
-
-#endif //_ARDUINO
 /*
 * CAPIREF: Refer to the official documentation at https://sod.pixlab.io/api.html for the expected parameters this interface takes.
 */

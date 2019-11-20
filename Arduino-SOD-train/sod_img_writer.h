@@ -214,16 +214,12 @@ STBIWDEF void stbi_flip_vertically_on_write(int flip_boolean);
 #endif
 #endif
 
-
-//
-#define _ARDUINO
-
 #ifndef STBI_WRITE_NO_STDIO
-#ifdef _ARDUINO
-#include "ardio.h"
+#ifndef ARDUINO
+#include <stdio.h>
 #else
-//#include <stdio.h>
-#endif //_ARDUINO
+#include "ardio.h"
+#endif //ARDUINO
 #endif // STBI_WRITE_NO_STDIO
 
 #include <stdarg.h>
@@ -296,7 +292,7 @@ static void stbi__start_write_callbacks(stbi__write_context *s, stbi_write_func 
 
 static void stbi__stdio_write(void *context, void *data, int size)
 {
-	filewrite(data, 1, size, (FILE*)context);
+	fwrite(data, 1, size, (FILE*)context);
 }
 
 static int stbi__start_write_file(stbi__write_context *s, const char *filename)
@@ -306,7 +302,7 @@ static int stbi__start_write_file(stbi__write_context *s, const char *filename)
 	if (fopen_s(&f, filename, "wb"))
 		f = NULL;
 #else
-	f = fileopen(filename, "wb");
+	f = fopen(filename, "wb");
 #endif
 	stbi__start_write_callbacks(s, stbi__stdio_write, (void *)f);
 	return f != NULL;
@@ -314,7 +310,7 @@ static int stbi__start_write_file(stbi__write_context *s, const char *filename)
 
 static void stbi__end_write_file(stbi__write_context *s)
 {
-	fileclose((FILE *)s->context);
+	fclose((FILE *)s->context);
 }
 
 #endif // !STBI_WRITE_NO_STDIO
@@ -1153,11 +1149,11 @@ STBIWDEF int stbi_write_png(char const *filename, int x, int y, int comp, const 
 	if (fopen_s(&f, filename, "wb"))
 		f = NULL;
 #else
-	f = fileopen(filename, "wb");
+	f = fopen(filename, "wb");
 #endif
 	if (!f) { STBIW_FREE(png); return 0; }
-	filewrite(png, 1, len, f);
-	fileclose(f);
+	fwrite(png, 1, len, f);
+	fclose(f);
 	STBIW_FREE(png);
 	return 1;
 }
@@ -1182,7 +1178,7 @@ STBIWDEF int stbi_write_png_to_func(stbi_write_func *func, void *context, int x,
 * public domain Simple, Minimalistic JPEG writer - http://www.jonolick.com/code.html
 */
 
-const unsigned char stbiw__jpg_ZigZag[]={ 0,1,5,6,14,15,27,28,2,4,7,13,16,26,29,42,3,8,12,17,25,30,41,43,9,11,18,
+static const unsigned char stbiw__jpg_ZigZag[] = { 0,1,5,6,14,15,27,28,2,4,7,13,16,26,29,42,3,8,12,17,25,30,41,43,9,11,18,
 24,31,40,44,53,10,19,23,32,39,45,52,54,20,22,33,38,46,51,55,60,21,34,37,47,50,56,59,61,35,36,48,49,57,58,62,63 };
 
 static void stbiw__jpg_writeBits(stbi__write_context *s, int *bitBufP, int *bitCntP, const unsigned short *bs) {

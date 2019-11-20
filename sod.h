@@ -33,13 +33,18 @@
  * along with SOD. If not, see <http://www.gnu.org/licenses/>.
  */
 /* Make sure we can call this stuff from C++ */
+
+#define SOD_ENABLE_NET_TRAIN
+//#define  SOD_DISABLE_IMG_READER
+
+//#define  SOD_DISABLE_IMG_WRITER
+
 #ifdef __cplusplus
  extern "C" {
 #endif 
 /*
  * Marker for exported interfaces.
  */
-
 #if defined (_MSC_VER) || defined (__MINGW32__) ||  defined (__GNUC__) && defined (__declspec)
 #define SOD_APIIMPORT	__declspec(dllimport)
 #define SOD_APIEXPORT	__declspec(dllexport)
@@ -47,13 +52,6 @@
 #define	SOD_APIIMPORT
 #define	SOD_APIEXPORT
 #endif
-
-
-#define SOD_ENABLE_NET_TRAIN
-//#define  SOD_DISABLE_IMG_READER
-
-//#define  SOD_DISABLE_IMG_WRITER
-
 /*
  * The SOD_VERSION C preprocessor macro evaluates to a string literal
  * that is the SOD version in the format "X.Y.Z" where X is the major
