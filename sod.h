@@ -35,9 +35,12 @@
 /* Make sure we can call this stuff from C++ */
 
 #define SOD_ENABLE_NET_TRAIN
-//#define  SOD_DISABLE_IMG_READER
 
+#ifdef AVR
+//#define  SOD_DISABLE_IMG_READER
+#define STBI_NO_GIF
 //#define  SOD_DISABLE_IMG_WRITER
+#endif //AVR
 
 #ifdef __cplusplus
  extern "C" {

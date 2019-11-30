@@ -66,10 +66,10 @@ void setup() {
     printf("(%s) x:%d y:%d w:%d h:%d prob:%f\n", aBoxes[i].zName, aBoxes[i].x, aBoxes[i].y, aBoxes[i].w, aBoxes[i].h, aBoxes[i].score);
     /* Draw a rose box on the target coordinates */
     sod_image_draw_bbox_width(color, aBoxes[i], 3, 255., 0, 225.);
-    //sod_image_draw_circle(color, aBoxes[i].x + (aBoxes[i].w / 2), aBoxes[i].y + (aBoxes[i].h / 2), aBoxes[i].w, 255., 0, 225.);
+    sod_image_draw_circle(color, aBoxes[i].x + (aBoxes[i].w / 2), aBoxes[i].y + (aBoxes[i].h / 2), aBoxes[i].w, 255., 0, 225.);
   }
   /* Save the detection result */
-  sod_img_save_as_png(color,"out.png");
+ // sod_img_save_as_png(color,"out.png");
   /* cleanup */
   sod_free_image(img);
   sod_free_image(color);

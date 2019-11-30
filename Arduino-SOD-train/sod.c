@@ -69,7 +69,9 @@
 #include "sod.h"
 /* Forward declaration */
 typedef struct SySet SySet;
+#ifndef SYBLOB
 typedef struct SyBlob SyBlob;
+#endif //SYBLOB
 typedef struct SyString SyString;
 typedef struct sod_vfs sod_vfs;
 /*
@@ -93,13 +95,16 @@ struct SySet
 /*
 * A variable length containers for generic data (Mostly dynamic string).
 */
+#ifndef SYBLOB
 struct SyBlob
 {
-	void   *pBlob;	          /* Base pointer */
-	size_t  nByte;	          /* Total number of used bytes */
-	size_t  mByte;	          /* Total number of available bytes */
-	int  nFlags;	          /* Blob internal flags, see below */
+  void   *pBlob;            /* Base pointer */
+  size_t  nByte;            /* Total number of used bytes */
+  size_t  mByte;            /* Total number of available bytes */
+  int  nFlags;            /* Blob internal flags, see below */
 };
+#define SYBLOB
+#endif //SYBLOB
 /*
 * Container for non null terminated strings.
 */

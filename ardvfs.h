@@ -3,29 +3,29 @@
 //this file need for suchesful linking functions into sod
 
 
-static int  ArdVfs_chdir(const char *ch)   /* int (*xChdir)(const char *) */
+static int  ArdVfs_chdir(const char *zPath)   /* int (*xChdir)(const char *) */
 {
-_chdir(ch);
+_chdir(zPath);
 }
 
-static int    ArdVfs_getcwd(const char *ch)   /* int (*xGetcwd)(SyBlob *) */
+static int    ArdVfs_getcwd(SyBlob *pCtx)   /* int (*xGetcwd)(SyBlob *) */
 {
-_getcwd(ch);
+_getcwd(pCtx);
 }
 
-static int    ArdVfs_mkdir(const char *ch)    /* int (*xMkdir)(const char *, int, int) */
+static int    ArdVfs_mkdir(const char *zPath, int mode, int recursive)    /* int (*xMkdir)(const char *, int, int) */
 {
-_mkdir(ch);
+_mkdir(zPath,mode,recursive);
 }
 
-static int    ArdVfs_rmdir(const char *ch)    /* int (*xRmdir)(const char *) */
+static int    ArdVfs_rmdir(const char *zPath)    /* int (*xRmdir)(const char *) */
 {
-_rmdir(ch);
+_rmdir(zPath);
 }
 
-static int    ArdVfs_isdir(const char *ch)    /* int (*xIsdir)(const char *) */
+static int    ArdVfs_isdir(const char *zPath)    /* int (*xIsdir)(const char *) */
 {
-_isdir(ch);
+_isdir(zPath);
 }
 
 static int    ArdVfs_Rename(const char *ch)   /* int (*xRename)(const char *, const char *) */
@@ -39,9 +39,9 @@ _Realpath(ch);
 }
    
    /* Directory */
-static int    ArdDir_Open(const char *ch)
+static int    ArdDir_Open(const char *ch, void **ppHandle)
 {
-_Dir_Open(ch);
+_Dir_Open(ch,ppHandle);
 }
 
 static int    ArdDir_Close(const char *ch)

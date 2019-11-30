@@ -317,8 +317,9 @@ Blazej Dariusz Roszkowski                                     github:Michaelange
 //   - If you use STBI_NO_PNG (or _ONLY_ without PNG), and you still
 //     want the zlib decoder to be available, #define STBI_SUPPORT_ZLIB
 //
-
-
+#ifdef AVR
+#include <avr/pgmspace.h>
+#endif
 #ifndef STBI_NO_STDIO
 #ifndef ARDUINO
 #include <stdio.h>
@@ -1199,6 +1200,7 @@ STBIDEF stbi_uc *stbi_load_from_file(FILE *f, int *x, int *y, int *comp, int req
 	return result;
 }
 
+#ifndef AVR
 STBIDEF stbi__uint16 *stbi_load_from_file_16(FILE *f, int *x, int *y, int *comp, int req_comp)
 {
 	stbi__uint16 *result;
@@ -1222,7 +1224,7 @@ STBIDEF stbi_us *stbi_load_16(char const *filename, int *x, int *y, int *comp, i
 	return result;
 }
 
-
+#endif //AVR
 #endif //!STBI_NO_STDIO
 
 STBIDEF stbi_us *stbi_load_16_from_memory(stbi_uc const *buffer, int len, int *x, int *y, int *channels_in_file, int desired_channels)

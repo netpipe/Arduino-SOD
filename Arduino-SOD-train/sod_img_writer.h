@@ -314,8 +314,11 @@ static void stbi__end_write_file(stbi__write_context *s)
 }
 
 #endif // !STBI_WRITE_NO_STDIO
-
+#ifdef AVR
+typedef unsigned long stbiw_uint32;
+#else
 typedef unsigned int stbiw_uint32;
+#endif
 typedef int stb_image_write_test[sizeof(stbiw_uint32) == 4 ? 1 : -1];
 
 static void stbiw__writefv(stbi__write_context *s, const char *fmt, va_list v)
